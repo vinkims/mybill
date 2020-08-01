@@ -10,8 +10,26 @@ export default function LoginScreen({navigation}){
     const[password, setPassword] = useState('');
 
     // save username and login
-    saveSession = () => {
+    saveSession = async () => {
         console.log(username, password)
+
+        // check for empty values
+        if(!username){
+            alert('Please fill username');
+            return;
+        }
+        if(!password){
+            alert('Please enter your password');
+            return;
+        }
+
+        // store username
+        try{
+            await AsyncStorage.setItem('username', username)
+        }catch(e){
+            console.log('error saving username', e)
+        }
+
         navigation.navigate('Timetable')
     }
 
