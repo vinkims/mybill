@@ -1,30 +1,37 @@
-import React, {useState} from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Alert, ToastAndroid } from 'react-native';
 import FormInput from '../components/FormInput';
 import FormButton from '../components/FormButton';
 import DatePicker from 'react-native-datepicker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-//import TimePicker from 'react-native-simple-time-picker';
 import TimePicker from 'react-native-24h-timepicker';
+import AsyncStorage from '@react-native-community/async-storage';
+import {openDatabase} from 'react-native-sqlite-storage'; 
+import globalStyles from './globalStyles';
+
 
 const {width, height} = Dimensions.get('screen');
 
-export default function CreateTimecardScreen(){
+var db = openDatabase({name: 'MyBill.db'});
+
+export default function CreateTimecardScreen({navigation}){
 
     let [date, setDate] = useState('');
+
+    const [userName, setUserName] = useState('');
     
-    const [empID, setEmpID] = useState('');
-    const [company, setCompany] = useState('');
+    let [empID, setEmpID] = useState('');
+    let [company, setCompany] = useState('');
 
-    const [startHour, setStartHour] = useState('');
-    const [startMinute, setStartMinute] = useState('');
-    const [endHour, setEndHour] = useState('');
-    const [endMinute, setEndMinute] = useState('');
+    let [startHour, setStartHour] = useState('');
+    let [startMinute, setStartMinute] = useState('');
+    let [endHour, setEndHour] = useState('');
+    let [endMinute, setEndMinute] = useState('');
+    let [rate, setRate] = useState(0);
 
-    const onStartChange = (hours, minutes) =>{
-        setStartHour(hours)
-        setStartMinute(minutes)
-    }
+    var startTime = `${startHour}:${startMinute}`;
+    var endTime = `${endHour}:${endMinute}`;
+    console.log('**Start Time: ', startTime)
 
     onStartCancel = () =>{
         this.TimePicker.close()
@@ -34,9 +41,34 @@ export default function CreateTimecardScreen(){
         this.TimePickerEnd.close()
     }
 
+    saveData = () =>{
+        // check for null values
+        if (!empID || !company || !rate || !date || !startHour || !startMinute || !endHour || !endMinute){
+            alert('Please fill in all details');
+            return;
+        }
+        
+        // save data to db
+        db.transaction(function (tx){
+            tx.executeSql('INSERT INTO table_user(employee_id, company, rate, date, start_time, end_time) VALUES (?,?,?,?,?,?) ', 
+            [empID, company, rate ,date, startTime, endTime],
+            (tx, results) =>{
+                console.log('Results', results.rowsAffected);
+                if (results.rowsAffected > 0){
+                    //ToastAndroid.show('Details saved successfully', ToastAndroid.SHORT);
+                    console.log('save data pressed')
+                    navigation.navigate('Timetable')
+                }else{
+                    //ToastAndroid.show('Error saving details!', ToastAndroid.SHORT);
+                    alert('Error saving details!');
+                }
+            } );
+        });
+    };
+
 
     return(
-        <View style={styles.container}>
+        <View style={globalStyles.container}>
             <Text>Create a Time Card</Text>
             <FormInput
                 labelName = 'Employee ID'
@@ -48,6 +80,12 @@ export default function CreateTimecardScreen(){
                 labelName = 'Company'
                 value = {company}
                 onChangeText = {(text) => setCompany(text)}
+            />
+
+            <FormInput
+                labelName = 'Rate'
+                value = {rate}
+                onChangeText = {(text) => setRate(text)}
             />
 
             <DatePicker
@@ -126,6 +164,7 @@ export default function CreateTimecardScreen(){
 
             <FormButton
                 title = 'Submit'
+                onPress = {this.saveData}
             />
         </View>
     );
@@ -138,7 +177,8 @@ const styles = StyleSheet.create({
     },
     timeView:{
         height: 40,
-        width: width / 1.5
+        width: width / 1.5,
+        paddingTop:5
     },
     timeTouchable:{
         width: width / 1.5,
