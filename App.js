@@ -6,6 +6,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import TimetableScreen from './src/screens/TimetableScreen';
 import CreateTimecardScreen from './src/screens/CreateTimecardScreen';
 import ViewTimecardScreen from './src/screens/ViewTimecardScreen';
+import EditTimecardScreen from './src/screens/EditTimecardScreen';
 
 const Stack = createStackNavigator();
 
@@ -28,6 +29,10 @@ function App(){
         <Stack.Screen
           name = 'ViewTimecard'
           component = {ViewTimecardScreen}
+        />
+        <Stack.Screen
+          name = 'EditTimecard'
+          component = {EditTimecardScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>
