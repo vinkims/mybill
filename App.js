@@ -5,6 +5,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import LoginScreen from './src/screens/LoginScreen';
 import TimetableScreen from './src/screens/TimetableScreen';
 import CreateTimecardScreen from './src/screens/CreateTimecardScreen';
+import ViewTimecardScreen from './src/screens/ViewTimecardScreen';
 
 const Stack = createStackNavigator();
 
@@ -23,6 +24,10 @@ function App(){
         <Stack.Screen
           name = 'CreateTimecard'
           component = {CreateTimecardScreen}
+        />
+        <Stack.Screen
+          name = 'ViewTimecard'
+          component = {ViewTimecardScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>
