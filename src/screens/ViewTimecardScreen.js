@@ -1,21 +1,19 @@
 import React, {useState, useEffect} from 'react';
-import { View, Text, StyleSheet, Dimensions, FlatList } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, FlatList, TouchableOpacity, Button, Alert } from 'react-native';
 import FormInput from '../components/FormInput';
 import FormButton from '../components/FormButton';
 import {openDatabase} from 'react-native-sqlite-storage'; 
 import globalStyles from './globalStyles';
 import { Table, TableWrapper, Row, Rows, Col, Cols, Cell } from 'react-native-table-component';
+import {Card, CardItem} from 'native-base';
 
 const {width, height} = Dimensions.get('screen');
 
 var db = openDatabase({name: 'MyBill.db'});
 
-export default function ViewTimecardScreen({}){
+export default function ViewTimecardScreen({navigation}){
 
     let [flatlistItems, setFlatlistItems] = useState([]);
-
-    let [tableHead, setTableHead] = useState([]);
-    let [widthArr, setWidthArr] = useState([]);
 
     useEffect(() =>{
         db.transaction((tx) => {
@@ -26,50 +24,113 @@ export default function ViewTimecardScreen({}){
                     temp.push(results.rows.item(i));
                 }
                 setFlatlistItems(temp);
+                console.log(flatlistItems)
             });
         });
     }, [])
 
-    let listViewItemSeperator = () =>{
-        return(
-            <View></View>
-        );
-    }
-
-    let listViewItem = (item) =>{
-        return(
-            <View
-                key = {item.user_id}
-                style={styles.listView}
-            >
-                <Text>Employee id: {item.employee_id}</Text>
-                <Text>Company: {item.company}</Text>
-                <Text>Date: {item.date}</Text>
-                <Text>Start Time: {item.start_time}</Text>
-                <Text>End Time: {item.end_time}</Text>
-            </View>
-        );
-    }
 
     return(
-        <View style={globalStyles.container}>
-            <FlatList
-                data = {flatlistItems}
-                ItemSeparatorComponent = {listViewItemSeperator}
-                keyExtractor = {(item, index) => index.toString}
-                renderItem = {({item}) => listViewItem(item)}
-            />
+        <View style={{paddingTop:30}}> 
+            <Text style={{paddingLeft:10}}>Time Cards</Text>
+            <Card>
+                <CardItem cardBody>
+                    <View style={styles.tableColumnHeading}>
+                        <Text style={styles.cardText}>Employee ID</Text>
+                    </View>
+                    <View style={[styles.tableColumnHeading, styles.tableColumnSeparator]}>
+                        <Text style={styles.cardText}>Billable Rate</Text>
+                    </View>
+                    <View style={[styles.tableColumnHeading, styles.tableColumnSeparator]}>
+                        <Text style={styles.cardText}>Company</Text>
+                    </View>
+                    <View style={[styles.tableColumnHeading, styles.tableColumnSeparator]}>
+                        <Text style={styles.cardText}>Date</Text>
+                    </View>
+                    <View style={[styles.tableColumnHeading, styles.tableColumnSeparator]}>
+                        <Text style={styles.cardText}>Start Time</Text>
+                    </View>
+                    <View style={[styles.tableColumnHeading, styles.tableColumnSeparator]}>
+                        <Text style={styles.cardText}>End Time</Text>
+                    </View>
+                    
+                </CardItem>
+                {
+                    flatlistItems.map((item, index) =>
+                        <CardItem key={index} cardBody style={styles.tableRow}>
+                            <View style={[styles.tableDateColumn, styles.tableColumnValue]}>
+                                <Text style={styles.cardText}>{item.employee_id}</Text>
+                            </View>
+                            <View style={[styles.tableColumnValue, styles.tableColumnSeparator]}>
+                                <Text style={styles.cardText}>{item.rate}</Text>
+                            </View>
+                            <View style={[styles.tableColumnValue, styles.tableColumnSeparator]}>
+                                <Text style={styles.cardText}>{item.company}</Text>
+                            </View>
+                            <View style={[styles.tableColumnValue, styles.tableColumnSeparator]}>
+                                <Text style={styles.cardText}>{item.date}</Text>
+                            </View>
+                            <View style={[styles.tableColumnValue, styles.tableColumnSeparator]}>
+                                <Text style={styles.cardText}>{item.start_time}</Text>
+                            </View>
+                            <View style={[styles.tableColumnValue, styles.tableColumnSeparator]}>
+                                <Text style={styles.cardText}>{item.end_time}</Text>
+                            </View>
+                            
+                        </CardItem>
+                    )
+                }
+            </Card>
+
+            <View style={styles.buttonView}>
+
+                <FormButton
+                    title = 'Edit Timecard'
+                    onPress = {()=> navigation.navigate('EditTimecard')}
+                />
+                <FormButton
+                    title = 'Create Timecard'
+                    onPress = {() => navigation.navigate('CreateTimecard')}
+                />
+            </View>
+
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    listViewSeparator:{
-        height: 0.2, 
-        width:'100%',
-        backgroundColor: '#808080'
+    head: { 
+        height: 40, 
+        backgroundColor: '#808B97' 
     },
-    listView:{
-        padding: 20
+    HeadStyle: { 
+        height: 50,
+        alignContent: "center",
+        backgroundColor: '#ffe0f0'
+    },
+    tableColumnHeading: {
+        flex: 1,
+        paddingHorizontal: 4
+    },
+    tableColumnSeparator: {
+        borderLeftWidth: 1,
+        borderColor: 'gray'
+    },
+    cardText:{
+        fontSize:12
+    },
+    tableRow: {
+        borderTopWidth: 1,
+        borderColor: 'gray'
+    },
+    tableDateColumn: {
+        alignItems: 'flex-start',
+    },
+    tableColumnValue: {
+        flex: 1,
+        paddingHorizontal: 4,
+    },
+    buttonView:{
+        alignItems:'center'
     }
 });
