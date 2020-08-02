@@ -182,9 +182,9 @@ const styles = StyleSheet.create({
     },
     timeTouchable:{
         width: width / 1.5,
-        borderWidth:1,
         flexDirection:'row',
         height: 40,
+        borderBottomWidth:1,
         borderBottomColor:'gray'
     },
     timeText:{
