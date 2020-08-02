@@ -11,9 +11,12 @@ const {width, height} = Dimensions.get('screen');
 
 var db = openDatabase({name: 'MyBill.db'});
 
-export default function EditTimecardScreen({navigation}){
+export default function EditTimecardScreen({route, navigation}){
 
-    let [dataItems, setDataItems] = useState([]);
+    const {user_id} = route.params;
+    console.log(user_id)
+
+    let [dataItems, setDataItems] = useState({});
 
     let [empID, setEmpID] = useState('');
     let [company, setCompany] = useState('');
@@ -22,7 +25,7 @@ export default function EditTimecardScreen({navigation}){
     let [startMinute, setStartMinute] = useState('');
     let [endHour, setEndHour] = useState('');
     let [endMinute, setEndMinute] = useState('');
-    let [rate, setRate] = useState(0);
+    let [rate, setRate] = useState('');
     let [date, setDate] = useState('');
 
     var startTime = `${startHour}:${startMinute}`;
@@ -30,28 +33,31 @@ export default function EditTimecardScreen({navigation}){
 
     useEffect(() =>{
         db.transaction((tx) =>{
-            tx.executeSql('SELECT * FROM table_user', [],
+            setDataItems({});
+            tx.executeSql('SELECT * FROM table_user where user_id=?', 
+            [user_id],
             (tx, results) => {
-                var temp = [];
-                for (let i = 0; i < results.rows.length; i++){
-                    temp.push(results.rows.item(i));
+                var len = results.rows.length;
+                console.log('len', len);
+                if (len > 0){
+                    setDataItems(results.rows.item(0));
+                }else{
+                    console.log('No user available')
                 }
-                setDataItems(temp);
-                console.log(dataItems)
             });
         });
     }, [])
 
-    let onStartCancel = () =>{
+    onStartCancel = () =>{
         this.TimePicker.close()
     }
 
-    let onEndCancel = () =>{
+    onEndCancel = () =>{
         this.TimePickerEnd.close()
     }
 
     // update timecard
-    let saveData = (user_id) =>{
+    saveData = (user_id) =>{
         // check for null values
         if (!empID || !company || !rate || !date || !startHour || !startMinute || !endHour || !endMinute){
             alert('Please fill in all details');
@@ -71,7 +77,7 @@ export default function EditTimecardScreen({navigation}){
                         [
                             {
                                 text: 'Ok', 
-                                onPress: () => navigation.navigate('EditTimecard')
+                                onPress: () => navigation.navigate('ViewTimecard')
                             },
                         ],
                     );
@@ -80,32 +86,9 @@ export default function EditTimecardScreen({navigation}){
         })
     }
 
-    // delete timecard
-    let deleteData = (user_id) =>{
-        db.transaction((tx) =>{
-            tx.executeSql('DELETE FROM table_user where user_id=?',
-            [user_id],
-            (tx, results) =>{
-                console.log('Results', results.rowsAffected);
-                if (results.rowsAffected > 0){
-                    Alert.alert(
-                        'Success',
-                        'Timecard successfully deleted',
-                        [
-                            {
-                                text: 'Ok', 
-                                onPress: () => navigation.navigate('EditTimecard')
-                            },
-                        ],
-                    );
-                }else alert('Delete failed!');
-            })
-        })
-    }
-
-    let renderData = (dataItems) =>{
+    return(
         <View style={globalStyles.container}>
-            <Text>Edit Time Card</Text>
+            <Text>Create a Time Card</Text>
             <FormInput
                 labelName = 'Employee ID'
                 value = {empID}
@@ -179,7 +162,7 @@ export default function EditTimecardScreen({navigation}){
                 ref={ref => {
                     this.TimePicker = ref;
                 }}
-                onCancel = {onStartCancel}
+                onCancel = {this.onStartCancel}
                 onConfirm = {(hour, minute) => {
                     setStartHour(hour)
                     setStartMinute(minute)
@@ -192,7 +175,7 @@ export default function EditTimecardScreen({navigation}){
                 ref={ref => {
                     this.TimePickerEnd = ref;
                 }}
-                onCancel = {onEndCancel}
+                onCancel = {this.onEndCancel}
                 onConfirm = {(hour, minute) => {
                     setEndHour(hour)
                     setEndMinute(minute)
@@ -201,29 +184,11 @@ export default function EditTimecardScreen({navigation}){
 
             />
 
-            {/*<FormButton
-                title = 'Submit'
-                onPress = {saveData(dataItems.user_id)}
-            />
-
             <FormButton
-                title = 'Delete'
-                onPress = {deleteData(dataItems.user_id)}
-            />*/}
+                title = 'Submit'
+                onPress = {this.saveData}
+            />
         </View>
-    }
-
-
-
-    return(
-        <ScrollView 
-            horizontal = {true}
-            pagingEnabled = {true}
-        >
-            <Text>Data items</Text>
-            {dataItems.map(data => renderData(data))}
-
-        </ScrollView>
 
     );
 }
@@ -240,7 +205,7 @@ const styles = StyleSheet.create({
     },
     timeTouchable:{
         width: width / 1.5,
-        borderWidth:1,
+        borderBottomWidth:1,
         flexDirection:'row',
         height: 40,
         borderBottomColor:'gray'
