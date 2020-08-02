@@ -29,6 +29,50 @@ export default function ViewTimecardScreen({navigation}){
         });
     }, [])
 
+    function deleteOrEdit(userID){
+        console.log('User ID', userID)
+        Alert.alert(
+            'Select',
+            'Edit or delete Timecard',
+            [
+                { text: 'Edit', onPress: () => editTimecard(userID)},
+                {text: 'Delete', onPress: () => deleteTimecard(userID)}
+            ]
+        );
+    }
+
+    // delete Timecard
+    function deleteTimecard(userID){
+        console.log('user id', userID)
+        db.transaction((tx) =>{
+            tx.executeSql('DELETE FROM table_user where user_id=?',
+            [userID],
+            (tx, results) =>{
+                console.log('Results', results.rowsAffected);
+                if (results.rowsAffected > 0){
+                    Alert.alert(
+                        'Success',
+                        'Timecard successfully deleted',
+                        [
+                            {
+                                text: 'Ok', 
+                                onPress: () => navigation.navigate('ViewTimecard')
+                            },
+                        ],
+                    );
+                }else alert('Delete failed!');
+            })
+        })
+    }
+
+    //edit Timecard
+    function editTimecard(userID){
+        navigation.navigate('EditTimecard', 
+        {
+            user_id: userID
+        })
+    }
+
 
     return(
         <View style={{paddingTop:30}}> 
@@ -53,6 +97,9 @@ export default function ViewTimecardScreen({navigation}){
                     <View style={[styles.tableColumnHeading, styles.tableColumnSeparator]}>
                         <Text style={styles.cardText}>End Time</Text>
                     </View>
+                    <View style={[styles.tableColumnHeading, styles.tableColumnSeparator]}>
+                        <Text style={styles.cardText}>Edit/Delete</Text>
+                    </View>
                     
                 </CardItem>
                 {
@@ -76,6 +123,12 @@ export default function ViewTimecardScreen({navigation}){
                             <View style={[styles.tableColumnValue, styles.tableColumnSeparator]}>
                                 <Text style={styles.cardText}>{item.end_time}</Text>
                             </View>
+                            <View style={[styles.tableColumnValue, styles.tableColumnSeparator]}>
+                                <Button
+                                    title = 'E/D'
+                                    onPress = {() => deleteOrEdit(index)}
+                                />
+                            </View>
                             
                         </CardItem>
                     )
@@ -84,10 +137,6 @@ export default function ViewTimecardScreen({navigation}){
 
             <View style={styles.buttonView}>
 
-                <FormButton
-                    title = 'Edit Timecard'
-                    onPress = {()=> navigation.navigate('EditTimecard')}
-                />
                 <FormButton
                     title = 'Create Timecard'
                     onPress = {() => navigation.navigate('CreateTimecard')}
