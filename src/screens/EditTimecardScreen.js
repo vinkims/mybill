@@ -25,7 +25,7 @@ export default function EditTimecardScreen({route, navigation}){
     let [startMinute, setStartMinute] = useState('');
     let [endHour, setEndHour] = useState('');
     let [endMinute, setEndMinute] = useState('');
-    let [rate, setRate] = useState('');
+    let [rate, setRate] = useState(0);
     let [date, setDate] = useState('');
 
     var startTime = `${startHour}:${startMinute}`;
@@ -57,17 +57,20 @@ export default function EditTimecardScreen({route, navigation}){
     }
 
     // update timecard
-    saveData = (user_id) =>{
+    function saveData(user_id){
         // check for null values
         if (!empID || !company || !rate || !date || !startHour || !startMinute || !endHour || !endMinute){
             alert('Please fill in all details');
             return;
         }
 
+        // calculate hours worked 
+        var hoursWorked = endHour - startHour;
+
         // save data to db
         db.transaction((tx) =>{
-            tx.executeSql('UPDATE table_user set employee_id=?, company=?, rate=?, date=?, start_time=?, end_time=? where user_id=?',
-            [empID, company, rate, date, startTime, endTime, user_id], 
+            tx.executeSql('UPDATE table_user SET employee_id=?, company=?, rate=?, date=?, start_time=?, end_time=? hours_worked=? WHERE user_id=?',
+            [empID, company, rate, date, startTime, endTime, hoursWorked, user_id], 
             (tx, results) =>{
                 console.log('Results', results.rowsAffected);
                 if (results.rowsAffected > 0){
@@ -88,7 +91,7 @@ export default function EditTimecardScreen({route, navigation}){
 
     return(
         <View style={globalStyles.container}>
-            <Text>Create a Time Card</Text>
+            <Text>Edit Time Card</Text>
             <FormInput
                 labelName = 'Employee ID'
                 value = {empID}
@@ -186,7 +189,7 @@ export default function EditTimecardScreen({route, navigation}){
 
             <FormButton
                 title = 'Submit'
-                onPress = {this.saveData}
+                onPress = {() => saveData(user_id)}
             />
         </View>
 

@@ -47,11 +47,14 @@ export default function CreateTimecardScreen({navigation}){
             alert('Please fill in all details');
             return;
         }
+
+        // calculate hours worked 
+        var hoursWorked = endHour - startHour;
         
         // save data to db
         db.transaction(function (tx){
-            tx.executeSql('INSERT INTO table_user(employee_id, company, rate, date, start_time, end_time) VALUES (?,?,?,?,?,?) ', 
-            [empID, company, rate ,date, startTime, endTime],
+            tx.executeSql('INSERT INTO table_user(employee_id, company, rate, date, start_time, end_time, hours_worked) VALUES (?,?,?,?,?,?,?) ', 
+            [empID, company, rate ,date, startTime, endTime, hoursWorked],
             (tx, results) =>{
                 console.log('Results', results.rowsAffected);
                 if (results.rowsAffected > 0){
