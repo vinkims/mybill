@@ -1,39 +1,91 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, Button} from 'react-native';
+import {View, Text, Button, StyleSheet} from 'react-native';
 import {openDatabase} from 'react-native-sqlite-storage';
 import globalStyles from './globalStyles';
 import FormButton from '../components/FormButton';
+import {Card, CardItem} from 'native-base';
 
 var db = openDatabase({name: 'MyBill.db'})
 
 export default function TimetableScreen({navigation}){
 
-    useEffect(()=>{
-        db.transaction(function (txn){
-            txn.executeSql("SELECT name FROM sqlite_master WHERE type='table' AND name='table_user' ",
-            [],
-            function(tx, res){
-                console.log('item', res.rows.length);
-                if (res.rows.length == 0){
-                    txn.executeSql('DROP TABLE IF EXISTS table_user', []);
-                    txn.executeSql('CREATE TABLE IF NOT EXISTS table_user(user_id INTEGER PRIMARY KEY AUTOINCREMENT, employee_id VARCHAR, company VARCHAR(30), rate INTEGER ,date VARCHAR, start_time VARCHAR(10), end_time VARCHAR(20) )',
-                    []);
-                };
-            } );
-        });
-    }, []);
-    return(
-        <View style = {globalStyles.container}>
-            <Text>Choose one option for your timetable:</Text>
-            <FormButton
-                title = 'Create'
-                onPress = {() => navigation.navigate('CreateTimecard')}
-            />
+    let [flatlistItems, setFlatlistItems] = useState([]);
 
-            <FormButton
-                title = 'View'
-                onPress = {() => navigation.navigate('ViewTimecard')}
-            />
+    useEffect(() =>{
+        db.transaction((tx) =>{
+            tx.executeSql('SELECT * FROM table_user', [],
+            (tx, results) =>{
+                var temp = [];
+                for (let i = 0; i < results.rows.length; i++){
+                    temp.push(results.rows.item(i));
+                }
+                setFlatlistItems(temp);
+                console.log(flatlistItems)
+            });
+        });
+    }, [])
+
+    return(
+        <View style={{paddingTop:30}}>
+            <Card>
+                <CardItem>
+                    <View style={styles.tableColumnHeading}>
+                        <Text style={styles.cardText}>Company</Text>
+                    </View>
+                    <View style={[styles.tableColumnHeading, styles.tableColumnSeparator]}>
+                        <Text style={styles.cardText}>Hours Worked</Text>
+                    </View>
+                </CardItem>
+                {
+                    flatlistItems.map((item, index) =>
+                    <CardItem key={index} cardBody style={styles.tableRow}>
+                        <View style={[styles.tableDateColumn, styles.tableColumnValue]}>
+                            <Text style={styles.cardText}>{item.company}</Text>
+                        </View>
+                        <View style={[styles.tableColumnValue, styles.tableColumnSeparator]}>
+                            <Text style={styles.cardText}>{item.hours_worked}</Text>
+                        </View>
+                    </CardItem>)
+                }
+            </Card>
+            <View style={globalStyles.container}>
+                <Text>Choose one option for timecards:</Text>
+                <FormButton
+                    title = 'Create'
+                    onPress = {() => navigation.navigate('CreateTimecard')}
+                />
+
+                <FormButton
+                    title = 'View'
+                    onPress = {() => navigation.navigate('ViewTimecard')}
+                />
+            </View>
+            
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    tableColumnHeading: {
+        flex: 1,
+        paddingHorizontal: 4
+    },
+    tableColumnSeparator: {
+        borderLeftWidth: 1,
+        borderColor: 'gray'
+    },
+    cardText:{
+        fontSize:12
+    },
+    tableRow: {
+        borderTopWidth: 1,
+        borderColor: 'gray'
+    },
+    tableDateColumn: {
+        alignItems: 'flex-start',
+    },
+    tableColumnValue: {
+        flex: 1,
+        paddingHorizontal: 4,
+    },
+});
